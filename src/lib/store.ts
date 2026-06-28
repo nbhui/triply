@@ -2,6 +2,7 @@
 import { create } from 'zustand'
 import { uid } from './utils'
 import { generateFlights, generateHotels, generateCars } from './mock-data'
+import { supabase } from './supabase'
 import type {
   Trip, Flight, Hotel, Car, Expense,
   HotelFilters, CarFilters, SavedTrip, Toast,
@@ -40,8 +41,10 @@ interface TripStore {
   setHotelFilters: (filters: Partial<HotelFilters>) => void
   setCarFilters: (filters: Partial<CarFilters>) => void
   setConfirmedPrice: (type: 'flight' | 'hotel' | 'car', price: number) => void
-  login: (name: string, email: string) => void
-  logout: () => void
+  signUp: (name: string, email: string, password: string) => Promise<string | null>
+  signIn: (email: string, password: string) => Promise<string | null>
+  logout: () => Promise<void>
+  initAuth: () => () => void
   addToast: (message: string, type?: Toast['type']) => void
   removeToast: (id: string) => void
 }
@@ -167,14 +170,45 @@ export const useTripStore = create<TripStore>((set, get) => ({
   setConfirmedPrice: (type, price) =>
     set((s) => ({ confirmedPrices: { ...s.confirmedPrices, [type]: price } })),
 
-  login: (name, email) => {
-    set({ user: { name, email } })
-    get().addToast(`Welcome, ${name}! 👋`, 'success')
+  signUp: async (name, email, password) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name } },
+    })
+    if (error) return error.message
+    if (data.user) {
+      set({ user: { name, email } })
+      get().addToast(`Welcome, ${name}! 👋`, 'success')
+    }
+    return null
   },
 
-  logout: () => {
+  signIn: async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) return error.message
+    const name = data.user?.user_metadata?.name ?? email.split('@')[0]
+    set({ user: { name, email } })
+    get().addToast(`Welcome back, ${name}!`, 'success')
+    return null
+  },
+
+  logout: async () => {
+    await supabase.auth.signOut()
     set({ user: null })
     get().addToast('Signed out successfully', 'info')
+  },
+
+  initAuth: () => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const name = session.user.user_metadata?.name ?? session.user.email!.split('@')[0]
+        set({ user: { name, email: session.user.email! } })
+      } else {
+        set({ user: null })
+      }
+    })
+    return () => subscription.unsubscribe()
   },
 
   addToast: (message, type = 'info') => {

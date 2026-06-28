@@ -1,15 +1,12 @@
 'use client'
-import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTripStore } from '@/lib/store'
 import { fmtDate, fmt } from '@/lib/utils'
-import AuthModal from '@/components/ui/AuthModal'
 
 export default function HomePage() {
   const router = useRouter()
-  const { trip, savedTrips, selFlight, selHotel, selCar, expenses, switchTrip, user, logout } = useTripStore()
-  const [authMode, setAuthMode] = useState<'login' | 'signup' | null>(null)
+  const { trip, savedTrips, selFlight, selHotel, selCar, expenses, switchTrip, user } = useTripStore()
 
   const continueHref = selHotel ? '/dashboard' : selFlight ? '/hotels' : '/flights'
   const allTrips = [
@@ -27,10 +24,6 @@ export default function HomePage() {
 
   return (
     <div>
-      {authMode && (
-        <AuthModal initialMode={authMode} onClose={() => setAuthMode(null)} />
-      )}
-
       {/* Hero */}
       <div className="max-w-xl mx-auto mt-16 text-center">
         <span className="block text-5xl mb-6">🌍</span>
@@ -76,55 +69,9 @@ export default function HomePage() {
           >
             ✈ {trip ? 'New Trip' : 'Start planning'}
           </Link>
-          {!user && (
-            <>
-              <button
-                onClick={() => setAuthMode('login')}
-                className="px-5 py-2.5 rounded-xl font-semibold transition-all hover:bg-elevated"
-                style={{ border: '1px solid var(--bdr)', color: 'var(--tx2)' }}
-              >
-                Sign in
-              </button>
-              <button
-                onClick={() => setAuthMode('signup')}
-                className="px-5 py-2.5 rounded-xl font-semibold transition-all hover:brightness-110 text-white"
-                style={{ background: 'var(--s2)', border: '1px solid var(--bdr)', color: 'var(--tx)' }}
-              >
-                Create account
-              </button>
-            </>
-          )}
         </div>
       </div>
 
-      {/* Auth CTA banner — shown only when not logged in and no trips */}
-      {!user && !trip && savedTrips.length === 0 && (
-        <div
-          className="max-w-2xl mx-auto mt-10 rounded-2xl p-6 flex items-center justify-between gap-6 flex-wrap"
-          style={{ background: 'var(--s1)', border: '1px solid var(--bdr)' }}
-        >
-          <div>
-            <div className="font-bold text-foreground mb-1">Save your trips across devices</div>
-            <div className="text-sm text-muted">Sign up free — your plans sync everywhere you plan.</div>
-          </div>
-          <div className="flex gap-2 flex-shrink-0">
-            <button
-              onClick={() => setAuthMode('signup')}
-              className="px-4 py-2 rounded-xl font-semibold text-sm text-white transition-all hover:brightness-110"
-              style={{ background: 'var(--accent)' }}
-            >
-              Get started
-            </button>
-            <button
-              onClick={() => setAuthMode('login')}
-              className="px-4 py-2 rounded-xl font-medium text-sm transition-all hover:bg-elevated"
-              style={{ border: '1px solid var(--bdr)', color: 'var(--tx2)' }}
-            >
-              Sign in
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Feature highlights when no trips */}
       {!trip && savedTrips.length === 0 && (

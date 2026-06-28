@@ -80,7 +80,7 @@ export default function DashboardPage() {
   const selectCls = 'w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-elevated border border-border text-foreground'
 
   return (
-    <div>
+    <div className="mt-10">
       {/* Header */}
       <div className="flex justify-between items-start mb-7 flex-wrap gap-4">
         <div>

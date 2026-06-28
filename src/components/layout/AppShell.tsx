@@ -1,23 +1,28 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Sidebar from './Sidebar'
 import ToastContainer from '@/components/ui/ToastContainer'
 import AuthModal from '@/components/ui/AuthModal'
 import { useTripStore } from '@/lib/store'
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useTripStore()
+  const { user, logout, initAuth } = useTripStore()
   const [authMode, setAuthMode] = useState<'login' | 'signup' | null>(null)
 
+  useEffect(() => {
+    const unsubscribe = initAuth()
+    return unsubscribe
+  }, [])
+
   return (
-    <div className="flex min-h-screen bg-canvas">
+    <div className="relative flex min-h-screen bg-canvas">
       <Sidebar />
       <main className="ml-56 flex-1 min-h-screen p-10 max-w-[calc(100vw-224px)]">
         {children}
       </main>
 
       {/* Top-right auth bar */}
-      <div className="fixed top-4 right-4 z-[100] flex items-center gap-2">
+      <div className="absolute top-4 right-4 z-[100] flex items-center gap-2">
         {user ? (
           <>
             <div
